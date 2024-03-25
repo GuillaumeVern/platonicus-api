@@ -1,4 +1,4 @@
-from MySQLdb import _mysql
+import mysql.connector
 
 def connect():
-    return _mysql.connect("localhost", "root", "", "platonicus")
+    return mysql.connector.connect(host="localhost", user="root", password="", database="platonicus")
