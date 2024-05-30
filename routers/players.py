@@ -10,17 +10,20 @@ db = connector.connect()
 @router.get("/", tags=["players"])
 def get_players():
     query = "SELECT * FROM player"
-    db.query(query)
-    result = db.store_result()
-    result = result.fetch_row(maxrows=0)
+    db.cmd_query(query)
+    result = db.get_rows()
     return result
 
 
 @router.get("/me", tags=["players"])
 def get_player_me():
-    return auth.decode_token(oauth2_scheme   )
+    query = "SELECT * FROM player WHERE username = %s"
+    db.cmd_query(query, (auth.get_current_user().username))
+    result = db.get_row()
+    return result
 
 
 @router.get("/{username}", tags=["players"])
 def get_player(username: str):
     return {"username": username}
+

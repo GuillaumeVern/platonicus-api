@@ -1,7 +1,17 @@
+CREATE TABLE User(
+   Id_User INT AUTO_INCREMENT,
+   Username VARCHAR(50)  NOT NULL,
+   Password VARCHAR(50)  NOT NULL,
+   Email VARCHAR(50)  NOT NULL,
+   PRIMARY KEY(Id_User)
+);
+
 CREATE TABLE Player(
    Id_Player INT AUTO_INCREMENT,
    Name VARCHAR(50)  NOT NULL,
-   PRIMARY KEY(Id_Player)
+   Id_User INT NOT NULL,
+   PRIMARY KEY(Id_Player),
+   FOREIGN KEY(Id_User) REFERENCES User(Id_User)
 );
 
 CREATE TABLE Score(
