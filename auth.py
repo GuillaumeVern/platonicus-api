@@ -119,3 +119,17 @@ async def login_for_access_token(request: Request, response: Response) -> Token:
         data=token_data, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.put("/", tags=["auth"], response_model=Token)
+async def register(request: Request, response: Response) -> Token:
+    form_data = await request.json()
+    try:
+        query = "INSERT INTO app_user (email, username, password) VALUES (%s, %s, %s)"
+        cursor = db.cursor()
+        cursor.execute(query, (form_data["username"], form_data["username"], form_data["password"]))
+        db.commit()
+        cursor.close()
+    except Exception as e:
+        print(e)
+    return await login_for_access_token(request, response)
