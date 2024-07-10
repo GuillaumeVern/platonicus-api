@@ -8,7 +8,7 @@ CREATE TABLE User(
 
 CREATE TABLE Player(
    Id_Player INT AUTO_INCREMENT,
-   Name VARCHAR(50)  NOT NULL,
+   Pseudo VARCHAR(50)  NOT NULL,
    Id_User INT NOT NULL,
    PRIMARY KEY(Id_Player),
    FOREIGN KEY(Id_User) REFERENCES User(Id_User)
