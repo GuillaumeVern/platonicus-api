@@ -1,4 +1,4 @@
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status, Body, Request, Response
 import connector
 import auth
 from typing import Annotated
@@ -17,8 +17,34 @@ def get_users():
     return result
 
 @router.get("/me", tags=["users"])
-def get_user_me(response_model=User):
-    return auth.get_current_user(token)
+def get_user_me(request: Request, response: Response):
+    if auth.authenticate_user(token=request.headers["Authorization"]):
+        userInfo = {"username": "",
+                    "email": "",
+                    "password": "",
+                    "pseudo": "",
+                    "highscore": "",
+                    "gamesplayed": "",
+                    }
+        try:
+            query = "SELECT app_user.id_user, app_user.username, app_user.password, app_user.email, player.id_player, player.pseudo, score.score, score.id_score, COUNT(score.id_score) AS gamesplayed FROM `app_user` JOIN player ON player.id_user = app_user.id_user JOIN score ON player.id_player = score.id_player WHERE app_user.username = %s GROUP BY app_user.id_user ORDER BY score.score DESC; "
+            cursor = db.cursor()
+            cursor.execute(query, [auth.authenticate_user(token=request.headers["Authorization"]).username])
+            result = cursor.fetchone()
+            cursor.close()
+            userInfo["username"] = result[1]
+            userInfo["email"] = result[3]
+            userInfo["password"] = result[2]
+            userInfo["pseudo"] = result[5]
+            userInfo["highscore"] = result[6]
+            userInfo["gamesplayed"] = result[8]
+            return userInfo
+        except Exception as e:
+            print("get_user_me: ", e)
+            return None
+    return None
+
+
     
 
 

@@ -33,6 +33,12 @@ def hash_password(password):
     return pwd_context.hash(password)
 
 def authenticate_user(username: str = None, password: str = None, token: str = None):
+    if token is not None:
+        token = token.split("Bearer ")[1]
+        token_data = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = token_data["username"]
+        password = token_data["password"]
+
     result = None
     if password is not None:
         try:
@@ -75,7 +81,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     except JWTError:
         raise credentials_exception
         
-    user = authenticate_user(username=username, token=token)
+    user = authenticate_user(token=token)
     if user is None:
         raise credentials_exception
 
