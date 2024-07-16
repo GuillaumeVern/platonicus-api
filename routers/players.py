@@ -14,6 +14,12 @@ def get_players():
     result = db.get_rows()
     return result
 
+@router.post("/", tags=["players"])
+def create_player():
+    query = "INSERT INTO player (Name, id_User) VALUES (%s, %s, %s)"
+    db.cmd_query(query, ("test", "test", "test"))
+    return {"username": "test", "password": "test", "email": "test"}
+
 
 @router.get("/me", tags=["players"])
 def get_player_me():

@@ -1,23 +1,30 @@
-CREATE TABLE User(
-   Id_User INT AUTO_INCREMENT,
-   Username VARCHAR(50)  NOT NULL,
-   Password VARCHAR(50)  NOT NULL,
-   Email VARCHAR(50)  NOT NULL,
-   PRIMARY KEY(Id_User)
+CREATE TABLE app_user(
+   id_user INT AUTO_INCREMENT,
+   username VARCHAR(50)  NOT NULL,
+   password VARCHAR(50)  NOT NULL,
+   email VARCHAR(50) ,
+   PRIMARY KEY(id_user)
 );
 
-CREATE TABLE Player(
-   Id_Player INT AUTO_INCREMENT,
-   Pseudo VARCHAR(50)  NOT NULL,
-   Id_User INT NOT NULL,
-   PRIMARY KEY(Id_Player),
-   FOREIGN KEY(Id_User) REFERENCES User(Id_User)
+CREATE TABLE player(
+   id_player INT AUTO_INCREMENT,
+   pseudo VARCHAR(50)  NOT NULL,
+   id_user INT NOT NULL,
+   PRIMARY KEY(id_player),
+   FOREIGN KEY(id_user) REFERENCES app_user(id_user)
 );
 
-CREATE TABLE Score(
-   Id_Score INT AUTO_INCREMENT,
-   Score INT NOT NULL,
-   Id_Player INT NOT NULL,
-   PRIMARY KEY(Id_Score),
-   FOREIGN KEY(Id_Player) REFERENCES Player(Id_Player)
+CREATE TABLE score(
+   id_score INT AUTO_INCREMENT,
+   score INT NOT NULL,
+   id_player INT NOT NULL,
+   PRIMARY KEY(id_score),
+   FOREIGN KEY(id_player) REFERENCES player(id_player)
+);
+
+CREATE TABLE token(
+   token VARCHAR(50)  NOT NULL,
+   id_user INT NOT NULL,
+   PRIMARY KEY(token),
+   FOREIGN KEY(id_user) REFERENCES app_user(id_user)
 );

@@ -24,20 +24,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `app_user`
+-- Table structure for table `user`
 --
 
-CREATE TABLE `app_user` (
+CREATE TABLE `user` (
   `email` varchar(50) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `app_user`
+-- Dumping data for table `user`
 --
 
-INSERT INTO `app_user` (`email`, `username`, `password`) VALUES
+INSERT INTO `user` (`email`, `username`, `password`) VALUES
 ('test@test.com', 'test', 'passwordtest');
 
 -- --------------------------------------------------------
@@ -95,9 +95,9 @@ INSERT INTO `token` (`Id_Token`, `token`, `email`) VALUES
 --
 
 --
--- Indexes for table `app_user`
+-- Indexes for table `user`
 --
-ALTER TABLE `app_user`
+ALTER TABLE `user`
   ADD PRIMARY KEY (`email`);
 
 --
@@ -152,7 +152,7 @@ ALTER TABLE `token`
 -- Constraints for table `player`
 --
 ALTER TABLE `player`
-  ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`email`) REFERENCES `app_user` (`email`);
+  ADD CONSTRAINT `player_ibfk_1` FOREIGN KEY (`email`) REFERENCES `user` (`email`);
 
 --
 -- Constraints for table `score`
@@ -164,7 +164,7 @@ ALTER TABLE `score`
 -- Constraints for table `token`
 --
 ALTER TABLE `token`
-  ADD CONSTRAINT `token_ibfk_1` FOREIGN KEY (`email`) REFERENCES `app_user` (`email`);
+  ADD CONSTRAINT `token_ibfk_1` FOREIGN KEY (`email`) REFERENCES `user` (`email`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

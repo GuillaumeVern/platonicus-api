@@ -34,26 +34,26 @@ def hash_password(password):
 
 def authenticate_user(username: str, password: str = None, token: str = None):
     result = None
-    print(username, password)
-    if password is not None:
+    if token is not None:
         try:
-            query = "SELECT app_user.email, username, password, token.token FROM app_user LEFT JOIN token ON app_user.email = token.email WHERE username = %s AND password = %s LIMIT 1"
+            query = "SELECT app_user.id_user, username, password, token.token FROM app_user LEFT JOIN token ON app_user.id_user = token.id_user WHERE token.token = %s LIMIT 1"
+            cursor = db.cursor()
+            cursor.execute(query, (token))
+            result = cursor.fetchone()
+            cursor.close()
+        except Exception as e:
+            print(e)
+    elif password is not None:
+        try:
+            query = "SELECT app_user.id_user, username, password, token.token FROM app_user LEFT JOIN token ON app_user.id_user = token.id_user WHERE username = %s AND password = %s LIMIT 1"
             cursor = db.cursor()
             cursor.execute(query, (username, password))
             result = cursor.fetchone()
             cursor.close()
         except Exception as e:
-            print(e)
-    elif token is not None:
-        try:
-            query = "SELECT app_user.email, username, password, token.token FROM app_user LEFT JOIN token ON app_user.email = token.email WHERE token.token = %s LIMIT 1"
-            cursor = db.cursor()
-            cursor.execute(query, (token,))
-            result = cursor.fetchone()
-            cursor.close()
-        except Exception as e:
-            print(e)
+            print("authenticate_user: ", e)
     if result is not None:
+        print("result", result)
         userdb = User(*result)
         return userdb
     else:
@@ -67,7 +67,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    add_access_token_to_user(data["email"], encoded_jwt)
+    add_access_token_to_user(data["username"], encoded_jwt)
     return encoded_jwt
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -91,20 +91,36 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 
     return user
 
-def add_access_token_to_user(email: str, token: str):
+def add_access_token_to_user(username: str, token: str):
     try:
-        query = "INSERT INTO token (email, token) VALUES (%s, %s)"
+        user = get_user(username)
+        if user is not None:
+            return
+        # insert token
+        query = "INSERT INTO token (id_user, token) VALUES (%s, %s)"
         cursor = db.cursor()
-        cursor.execute(query, (email, token))
+        cursor.execute(query, (user_id, token))
         db.commit()
         cursor.close()
     except Exception as e:
-        print(e)
+        print("add_access_token_to_user: ", e)
     
+def get_user(username: str):
+    try:
+        query = "SELECT * FROM app_user WHERE username = %s LIMIT 1"
+        cursor = db.cursor()
+        cursor.execute(query, [username])
+        result = cursor.fetchone()
+        cursor.close()
+        return User(*result)
+    except Exception as e:
+        print("get_user: ", e)
+        return None
 
-@router.post("/", tags=["auth"], response_model=Token)
+@router.post("/login", tags=["auth"], response_model=Token)
 async def login_for_access_token(request: Request, response: Response) -> Token:
     form_data = await request.json()
+    print("form data", form_data)
 
     user = authenticate_user(username=form_data["username"], password=form_data["password"])
     if not user:
@@ -121,15 +137,20 @@ async def login_for_access_token(request: Request, response: Response) -> Token:
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.put("/", tags=["auth"], response_model=Token)
+@router.post("/register", tags=["auth"], response_model=Token)
 async def register(request: Request, response: Response) -> Token:
     form_data = await request.json()
     try:
-        query = "INSERT INTO app_user (email, username, password) VALUES (%s, %s, %s)"
+        user = get_user(form_data["username"])
+        if user is not None:
+            response.status_code = 401 # obfuscation
+            return response
+        query = "INSERT INTO app_user (username, password) VALUES (%s, %s)"
         cursor = db.cursor()
-        cursor.execute(query, (form_data["username"], form_data["username"], form_data["password"]))
+        cursor.execute(query, (form_data["username"], form_data["password"]))
         db.commit()
         cursor.close()
     except Exception as e:
-        print(e)
-    return await login_for_access_token(request, response)
+        print("register: ", e)
+    response.status_code = 201
+    return response
