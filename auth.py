@@ -32,20 +32,11 @@ def verify_password(plain_password, hashed_password):
 def hash_password(password):
     return pwd_context.hash(password)
 
-def authenticate_user(username: str, password: str = None, token: str = None):
+def authenticate_user(username: str = None, password: str = None, token: str = None):
     result = None
-    if token is not None:
+    if password is not None:
         try:
-            query = "SELECT app_user.id_user, username, password, token.token FROM app_user LEFT JOIN token ON app_user.id_user = token.id_user WHERE token.token = %s LIMIT 1"
-            cursor = db.cursor()
-            cursor.execute(query, (token))
-            result = cursor.fetchone()
-            cursor.close()
-        except Exception as e:
-            print(e)
-    elif password is not None:
-        try:
-            query = "SELECT app_user.id_user, username, password, token.token FROM app_user LEFT JOIN token ON app_user.id_user = token.id_user WHERE username = %s AND password = %s LIMIT 1"
+            query = "SELECT id_user, username, password, email FROM app_user WHERE username = %s AND password = %s LIMIT 1"
             cursor = db.cursor()
             cursor.execute(query, (username, password))
             result = cursor.fetchone()
@@ -53,7 +44,6 @@ def authenticate_user(username: str, password: str = None, token: str = None):
         except Exception as e:
             print("authenticate_user: ", e)
     if result is not None:
-        print("result", result)
         userdb = User(*result)
         return userdb
     else:
@@ -120,8 +110,6 @@ def get_user(username: str):
 @router.post("/login", tags=["auth"], response_model=Token)
 async def login_for_access_token(request: Request, response: Response) -> Token:
     form_data = await request.json()
-    print("form data", form_data)
-
     user = authenticate_user(username=form_data["username"], password=form_data["password"])
     if not user:
         raise HTTPException(
@@ -135,6 +123,26 @@ async def login_for_access_token(request: Request, response: Response) -> Token:
         data=token_data, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+@router.post("/token", tags=["auth"], response_model=Token)
+async def login_with_token(request: Request, response: Response) -> Token:
+    form_data = await request.json()
+    token_data = jwt.decode(form_data["token"], SECRET_KEY, algorithms=[ALGORITHM])
+    user = authenticate_user(username=token_data["username"], password=token_data["password"])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token_data = user.dict()
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data=token_data, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+    
+
 
 
 @router.post("/register", tags=["auth"], response_model=Token)
