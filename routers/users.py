@@ -28,7 +28,7 @@ def get_user_me(request: Request, response: Response):
                     "gamesplayed": "",
                     }
         try:
-            query = "SELECT app_user.id_user, app_user.username, app_user.password, app_user.email, player.id_player, player.pseudo, score.score, score.id_score, COUNT(score.id_score) AS gamesplayed FROM `app_user` JOIN player ON player.id_user = app_user.id_user JOIN score ON player.id_player = score.id_player WHERE app_user.username = %s GROUP BY app_user.id_user ORDER BY score.score DESC; "
+            query = "SELECT app_user.id_user, app_user.username, app_user.password, app_user.email, player.id_player, player.pseudo, MAX(score.score) as score, score.id_score, COUNT(score.id_score) AS gamesplayed FROM `app_user` JOIN player ON player.id_user = app_user.id_user JOIN score ON player.id_player = score.id_player WHERE app_user.username = %s GROUP BY app_user.id_user ORDER BY score.score DESC; "
             cursor = db.cursor()
             cursor.execute(query, [auth.authenticate_user(token=request.headers["Authorization"]).username])
             result = cursor.fetchone()
@@ -50,7 +50,7 @@ def get_user_me(request: Request, response: Response):
 def get_user_leaderboard(request: Request, response: Response):
     if auth.authenticate_user(token=request.headers["Authorization"]):
         try:
-            query = "SELECT app_user.id_user, app_user.username, app_user.password, app_user.email, player.id_player, player.pseudo, score.score, score.id_score, COUNT(score.id_score) AS gamesplayed FROM `app_user` JOIN player ON player.id_user = app_user.id_user JOIN score ON player.id_player = score.id_player GROUP BY app_user.id_user ORDER BY score.score DESC; "
+            query = "SELECT app_user.id_user, app_user.username, app_user.password, app_user.email, player.id_player, player.pseudo, MAX(score.score) as score, score.id_score, COUNT(score.id_score) AS gamesplayed FROM `app_user` JOIN player ON player.id_user = app_user.id_user JOIN score ON player.id_player = score.id_player GROUP BY app_user.id_user ORDER BY score.score DESC; "
             cursor = db.cursor()
             cursor.execute(query)
             results = cursor.fetchall()

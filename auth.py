@@ -162,8 +162,13 @@ async def register(request: Request, response: Response) -> Token:
         query = "INSERT INTO app_user (username, password) VALUES (%s, %s)"
         cursor = db.cursor()
         cursor.execute(query, (form_data["username"], form_data["password"]))
-        db.commit()
         cursor.close()
+
+        query = "INSERT INTO player (id_user, pseudo) VALUES ((SELECT id_user FROM app_user WHERE username = %s), %s)"
+        cursor = db.cursor()
+        cursor.execute(query, (form_data["username"], form_data["username"]))
+        cursor.close()
+        
     except Exception as e:
         print("register: ", e)
     response.status_code = 201
