@@ -10,12 +10,14 @@ db = connector.connect()
 
 
 @router.get("/", tags=["users"])
-def get_users():
-    query = "SELECT * FROM app_user"
-    db.query(query)
-    result = db.store_result()
-    result = result.fetch_row(maxrows=0)
-    return result
+def get_users(request: Request, response: Response):
+    if auth.authenticate_user(token=request.headers["Authorization"]):
+        query = "SELECT * FROM app_user"
+        cursor = db.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return result
+    return None
 
 @router.get("/me", tags=["users"])
 def get_user_me(request: Request, response: Response):
@@ -81,3 +83,10 @@ def get_user_leaderboard(request: Request, response: Response):
 @router.get("/{username}", tags=["users"])
 def get_user(username: str):
     return {"username": username}
+
+
+@router.delete("/{id_user}", tags=["users"])
+def delete_user(id_user: int):
+    query = "DELETE FROM app_user WHERE id_user = %s"
+    db.query(query, [id_user])
+    return {"message": "User deleted successfully"}
